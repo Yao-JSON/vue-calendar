@@ -1,2 +1,35 @@
 @import './style.css';
-@import './element-ui.css'
+@import './element-ui.css';
+
+.calendar-container {
+  background-color: #fff;
+  padding: 10px;
+  float: left;
+  position: relative;
+}
+
+.calendar-container .arrow {
+  top: -10px;
+  left: 275px;
+  margin-right: 3px;
+  border-top-width: 0;
+  border-bottom-color: #ebeef5;
+  border-width: 10px;
+  filter: drop-shadow(0 2px 12px rgba(0,0,0,.03));
+  position: absolute;
+  display: block;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-bottom-color: #73b9ff;
+}
+
+.calendar-container .arrow::after {
+  position: absolute;
+  display: block;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+}
