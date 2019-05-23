@@ -68,11 +68,8 @@ const defaultHolidayList = [
 const prepared = {};
 
 let holidayStatus = {};
-
-const resposeData = {
-  holidayFestival: [],
-  holidayList: {},
-};
+let holidayList = {};
+let holidayFestival = [];
 
 
 const WEEKS = [
@@ -119,14 +116,16 @@ function prepareExternalData(year, month, callback) {
 
   getExternalData(year, month).then((res) => {
     if (!res) return;
-    const { almanac, holidayFestival, holidaylist } = res;
+    const { almanac } = res;
+    const holidaylistRes = res.holidaylist;
+    holidayFestival = res.holidayFestival;
     almanacData = almanac;
   
     holidayStatus = res.holidayStatus;
 
-    Vue.set(resposeData, 'holidayFestival', holidayFestival);
-    Vue.set(resposeData, 'holidaylist', holidaylist);
-
+    for(let key in holidaylistRes) {
+      Vue.set(holidayList, key, holidaylistRes[key])
+    }
     callback(fullmonth);
   });
 }
@@ -217,7 +216,8 @@ export default {
       days,
       weeks,
       almanacData,
-      resposeData,
+      holidayStatus,
+      holidayList
     };
   },
   computed: {
@@ -228,7 +228,7 @@ export default {
       return this.days[this.fullMonth];
     },
     currentHolidayList() {
-      return this.resposeData.holidayList[this.cYear] || defaultHolidayList;
+      return this.holidayList[this.cYear] || defaultHolidayList;
     },
     selected() {
       return `${this.cYear}-${this.cMonth + 1}-${this.cDate}`;
@@ -253,10 +253,7 @@ export default {
       return almanacData[this.selected] || { avoid: '', suit: '' };
     },
     isHolidayFestival() {
-      console.log(this.selected);
-
-    return this.resposeData.holidayFestival.indexOf(this.selected) !== -1
-
+      return holidayFestival.indexOf(this.selected) !== -1;
     },
     holiday() {
       return this.isHolidayFestival ? this.selected : '';
