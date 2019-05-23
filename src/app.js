@@ -4,17 +4,22 @@ import $ from 'jquery';
 import lunar from './lunar';
 function queryExternalData(cb) {
   $.getJSON('https://raw.githubusercontent.com/Yao-JSON/vue-calendar/master/data.json', (res) => {
-    console.log(res);
     cb(res)
   })
 }
 
+const s = 1000;
+const m = 60 * s;
+const h = 60 * m;
+const day = h * 24;
+const week = day * 7;
+
 function getExternalData(y, m) {
+  const now = new Date().getTime();
   const query = `${y}年${m + 1}月`;
-  console.log(query);
   const data = localStorage.getItem(`calendarData:${query}`);
 
-  if (data) {
+  if (data && now - data.time <= week) {
     try {
       return Promise.resolve(JSON.parse(data));
     } catch (e) {
@@ -27,7 +32,7 @@ function getExternalData(y, m) {
       const { almanac, holidaylist,  } = res;
       const { holidayStatus = {}, holidayFestival = [], almanac: almanacRes } = res[query] || {};
 
-      const data = {holidayStatus, holidayFestival, almanac: {...almanac, ...almanacRes}, holidaylist};
+      const data = {holidayStatus, holidayFestival, almanac: {...almanac, ...almanacRes}, holidaylist, time: now};
 
       localStorage.setItem(`calendarData:${query}`, JSON.stringify(data));
       resolve(data);
@@ -44,8 +49,6 @@ function pad(n) {
 }
 
 let almanacData = {};
-let holidayStatus = {};
-let holidayFestival = [];
 
 const defaultHolidayList = [
   {
@@ -62,8 +65,16 @@ const defaultHolidayList = [
   }
 ]
 
-let holidayList = {};
 const prepared = {};
+
+let holidayStatus = {};
+
+const resposeData = {
+  holidayFestival: [],
+  holidayList: {},
+};
+
+
 const WEEKS = [
   { name: '日', id: 0 },
   { name: '一', id: 1 },
@@ -108,12 +119,13 @@ function prepareExternalData(year, month, callback) {
 
   getExternalData(year, month).then((res) => {
     if (!res) return;
-    console.log(res);
-    const { almanac, holidayStatus: holidayStatusRes, holidayFestival: holidayFestivalRes, holidaylist: holidaylistRes } = res;
+    const { almanac, holidayFestival, holidaylist } = res;
     almanacData = almanac;
-    holidayStatus = holidayStatusRes;
-    holidayFestival = holidayFestivalRes;
-    holidayList = holidaylistRes;
+  
+    holidayStatus = res.holidayStatus;
+
+    Vue.set(resposeData, 'holidayFestival', holidayFestival);
+    Vue.set(resposeData, 'holidaylist', holidaylist);
 
     callback(fullmonth);
   });
@@ -205,6 +217,7 @@ export default {
       days,
       weeks,
       almanacData,
+      resposeData,
     };
   },
   computed: {
@@ -215,7 +228,7 @@ export default {
       return this.days[this.fullMonth];
     },
     currentHolidayList() {
-      return holidayList[this.cYear] || defaultHolidayList;
+      return this.resposeData.holidayList[this.cYear] || defaultHolidayList;
     },
     selected() {
       return `${this.cYear}-${this.cMonth + 1}-${this.cDate}`;
@@ -242,7 +255,7 @@ export default {
     isHolidayFestival() {
       console.log(this.selected);
 
-    return holidayFestival.indexOf(this.selected) !== -1
+    return this.resposeData.holidayFestival.indexOf(this.selected) !== -1
 
     },
     holiday() {
