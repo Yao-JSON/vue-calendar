@@ -2,9 +2,7 @@
 @import './element-ui.css';
 
 .calendar-container {
-  background-color: #fff;
   padding: 10px;
-  float: left;
   position: relative;
 }
 
