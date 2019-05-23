@@ -2,19 +2,18 @@ import Vue from 'vue';
 /* eslint-disable */ 
 import $ from 'jquery';
 import lunar from './lunar';
-import data from './../data.json'
-console.log('data', data);
-function queryExternalData(query, cb) {
-
-  // $.getJSON('https://su.yzcdn.cn/public_files/2019/05/23/vue-calendar/index.json', (res) => {
-  //   console.log(res);
-  // })
-  cb(data)
+function queryExternalData(cb) {
+  $.getJSON('https://raw.githubusercontent.com/Yao-JSON/vue-calendar/master/data.json', (res) => {
+    console.log(res);
+    cb(res)
+  })
 }
 
 function getExternalData(y, m) {
   const query = `${y}年${m + 1}月`;
+  console.log(query);
   const data = localStorage.getItem(`calendarData:${query}`);
+
   if (data) {
     try {
       return Promise.resolve(JSON.parse(data));
@@ -24,9 +23,14 @@ function getExternalData(y, m) {
   }
 
   return new Promise((resolve) => {
-    queryExternalData(query, (ret) => {
-      localStorage.setItem(`calendarData:${query}`, JSON.stringify(ret));
-      resolve(ret);
+    queryExternalData((res) => {
+      const { almanac, holidaylist,  } = res;
+      const { holidayStatus = {}, holidayFestival = [], almanac: almanacRes } = res[query] || {};
+
+      const data = {holidayStatus, holidayFestival, almanac: {...almanac, ...almanacRes}, holidaylist};
+
+      localStorage.setItem(`calendarData:${query}`, JSON.stringify(data));
+      resolve(data);
     });
   });
 }
